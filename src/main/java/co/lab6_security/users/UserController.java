@@ -8,11 +8,14 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @Controller
 @RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
+    private final CaptchaService captchaService;
 
     @GetMapping("/")
     public String main() {
@@ -20,23 +23,42 @@ public class UserController {
     }
 
     @GetMapping("/home")
-    public String successPage(Model model) {
+    public String successPage(Model model, HttpSession session) {
+        String username = (String) session.getAttribute("username");
+        if (username == null) {
+            return "redirect:/login";
+        }
+        model.addAttribute("username", username);
         model.addAttribute("success", "You are logged in!");
         return "success";
     }
 
 
     @GetMapping("/register")
-    public String showRegisterForm(Model model) {
+    public String showRegisterForm(Model model, HttpSession session) {
         model.addAttribute("userDto", new UserDto());
+        Map<String, String> captcha = captchaService.generateCaptcha(session.getId());
+        model.addAttribute("captchaQuestion", captcha.get("question"));
         return "register";
     }
 
     @PostMapping("/register")
     public String registerUser(@Valid @ModelAttribute UserDto userDto,
                                BindingResult result,
+                               @RequestParam("captchaAnswer") String captchaAnswer,
+                               HttpSession session,
                                Model model) {
+
+        if (!captchaService.validateCaptcha(session.getId(), captchaAnswer)) {
+            model.addAttribute("error", "Incorrect captcha answer. Please try again.");
+            Map<String, String> captcha = captchaService.generateCaptcha(session.getId());
+            model.addAttribute("captchaQuestion", captcha.get("question"));
+            return "register";
+        }
+
         if (result.hasErrors()) {
+            Map<String, String> captcha = captchaService.generateCaptcha(session.getId());
+            model.addAttribute("captchaQuestion", captcha.get("question"));
             return "register";
         }
 
@@ -45,6 +67,8 @@ public class UserController {
             return "redirect:/login?registered";
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
+            Map<String, String> captcha = captchaService.generateCaptcha(session.getId());
+            model.addAttribute("captchaQuestion", captcha.get("question"));
             return "register";
         }
     }
@@ -57,9 +81,11 @@ public class UserController {
     @PostMapping("/login")
     public String loginUser(@RequestParam String username,
                             @RequestParam String password,
+                            HttpSession session,
                             Model model) {
         try {
             userService.authenticateUser(username, password);
+            session.setAttribute("username", username);
             return "redirect:/home";
         } catch (RuntimeException e) {
             if (e.getMessage().equals("User not found")) {

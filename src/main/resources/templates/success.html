@@ -28,8 +28,8 @@
                     </div>
 
                     <h1 class="h3 mb-3 fw-semibold" th:text="${success} ?: 'Successful login!'">Successful login!</h1>
-                    <p class="text-muted mb-4">Hello ${user.name}</p>
-
+                    <p class="text-muted" th:if="${username}" th:text="'Welcome, ' + ${username} + '!'">Welcome,
+                        user!</p>
                     <div class="d-grid">
                         <a href="/logout" class="btn btn-outline-primary rounded-pill">Log Out</a>
                     </div>

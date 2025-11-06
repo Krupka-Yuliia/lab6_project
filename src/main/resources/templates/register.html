@@ -55,15 +55,12 @@
                                  th:errors="*{confirmPassword}"></div>
                         </div>
 
-                        <div class="alert alert-secondary small text-start">
-                            <strong>Password requirements:</strong>
-                            <ul class="mb-0">
-                                <li>At least 8 characters long</li>
-                                <li>Contains uppercase and lowercase letters</li>
-                                <li>Contains at least one digit</li>
-                                <li>Contains at least one special character</li>
-                            </ul>
+                        <div class="mb-3">
+                            <label for="captcha" class="form-label">Captcha: <strong
+                                    th:text="${captchaQuestion}"></strong></label>
+                            <input type="text" id="captcha" name="captchaAnswer" class="form-control" required>
                         </div>
+
 
                         <div class="d-grid">
                             <button type="submit" class="btn btn-success rounded-pill">Register</button>
