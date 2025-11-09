@@ -64,7 +64,8 @@ public class UserController {
 
         try {
             userService.registerUser(userDto);
-            return "redirect:/login?registered";
+            model.addAttribute("success", "Registration successful! Please check your email to activate your account.");
+            return "activation";
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
             Map<String, String> captcha = captchaService.generateCaptcha(session.getId());
@@ -97,6 +98,20 @@ public class UserController {
             return "login";
         }
     }
+
+    @GetMapping("/activate")
+    public String activateAccount(@RequestParam String token, Model model) {
+        boolean activated = userService.activateUser(token);
+
+        if (activated) {
+            model.addAttribute("success", "Your account have been activated successfully! You can log in now!");
+        } else {
+            model.addAttribute("error", "Expired or invalid activation token. Try again.");
+        }
+
+        return "activation";
+    }
+
 
     @GetMapping("/logout")
     public String logout(HttpSession session, Model model) {
