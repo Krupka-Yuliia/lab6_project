@@ -19,12 +19,34 @@
                         Registration successful! Please log in.
                     </div>
 
-                    <div th:if="${error}" class="alert alert-danger text-center" th:text="${error}"></div>
+                    <div th:if="${success}" class="alert alert-success text-center" th:text="${success}"></div>
+
+                    <div th:if="${accountLocked == true or lockedUser != null}" class="alert alert-danger text-center">
+                        <p class="mb-1"><strong>🔒 Account Locked</strong></p>
+                        <p class="mb-1">Too many failed login attempts for user <strong
+                                th:text="${param.username != null ? param.username[0] : enteredUsername}"></strong>.</p>
+                        <p class="mb-0" th:if="${lockedUserLockMinutes != null}">Account will be unlocked in <strong
+                                th:text="${lockedUserLockMinutes}">0</strong> minute(s).</p>
+                    </div>
+
+                    <div th:if="${param.error != null and remainingAttempts != null and remainingAttempts > 0 and accountLocked != true and lockedUser == null}"
+                         class="alert alert-warning text-center">
+                        <p class="mb-1"><strong>⚠️ Login Failed</strong></p>
+                        <p class="mb-1">Invalid username or password.</p>
+                        <p class="mb-0">You have <strong th:text="${remainingAttempts}">0</strong> remaining attempt(s)
+                            before your account is locked for 15 minutes.</p>
+                    </div>
+
+                    <div th:if="${param.error != null and remainingAttempts == null and accountLocked != true and lockedUser == null}"
+                         class="alert alert-danger text-center">
+                        Invalid username or password.
+                    </div>
 
                     <form th:action="@{/login}" method="post">
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
-                            <input type="text" id="username" name="username" class="form-control" required>
+                            <input type="text" id="username" name="username" class="form-control"
+                                   th:value="${param.username != null ? param.username[0] : ''}" required>
                         </div>
 
                         <div class="mb-3">
@@ -33,12 +55,14 @@
                         </div>
 
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary rounded-pill">Login</button>
+                            <button type="submit" class="btn btn-primary rounded-pill">
+                                Login
+                            </button>
                         </div>
                     </form>
 
                     <p class="text-center mt-3 mb-0">
-                        Don’t have an account?
+                        Don't have an account?
                         <a href="/register" class="text-decoration-none fw-semibold">Register</a>
                     </p>
                 </div>

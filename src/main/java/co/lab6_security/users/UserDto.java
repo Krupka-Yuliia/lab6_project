@@ -31,4 +31,6 @@ public class UserDto {
 
     @NotBlank(message = "Password confirmation is required")
     private String confirmPassword;
+
+    private Role role;
 }
