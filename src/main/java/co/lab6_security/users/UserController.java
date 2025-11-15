@@ -41,9 +41,40 @@ public class UserController {
         model.addAttribute("email", user.getEmail() != null ? user.getEmail() : "");
         model.addAttribute("isAdmin", isAdmin);
         model.addAttribute("role", user.getRole().name());
+        model.addAttribute("twoFactorEnabled", user.isTwoFactorEnabled());
         model.addAttribute("success", "You are logged in!");
 
         return "success";
+    }
+
+    @PostMapping("/enable-2fa")
+    public String enableTwoFactorAuth(Model model) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        User user = userService.findByUsername(username).orElse(null);
+        if (user != null) {
+            user.setTwoFactorEnabled(true);
+            userService.saveUser(user);
+            model.addAttribute("success", "Two-factor authentication has been enabled for your account.");
+        }
+
+        return "redirect:/home";
+    }
+
+    @PostMapping("/disable-2fa")
+    public String disableTwoFactorAuth(Model model) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        User user = userService.findByUsername(username).orElse(null);
+        if (user != null) {
+            user.setTwoFactorEnabled(false);
+            userService.saveUser(user);
+            model.addAttribute("success", "Two-factor authentication has been disabled for your account.");
+        }
+
+        return "redirect:/home";
     }
 
     @GetMapping("/register")

@@ -15,8 +15,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-import java.time.LocalDateTime;
-
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -33,6 +31,8 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/register", "/activate", "/login", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/2fa", "/verify-2fa", "/resend-2fa-code").permitAll()
+                        .requestMatchers("/enable-2fa", "/disable-2fa").authenticated()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

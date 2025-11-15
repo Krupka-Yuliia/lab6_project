@@ -33,4 +33,27 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void sendTwoFactorCode(String to, String code) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setTo(to);
+        helper.setSubject("Your Two-Factor Authentication Code");
+
+        String content =
+                "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>" +
+                        "<h2>Two-Factor Authentication</h2>" +
+                        "<p>Your verification code is:</p>" +
+                        "<div style='font-size: 24px; font-weight: bold; padding: 15px; background-color: #f0f0f0; text-align: center; letter-spacing: 5px;'>" +
+                        code +
+                        "</div>" +
+                        "<p>This code will expire in 10 minutes.</p>" +
+                        "<p>If you didn't request this code, please ignore this email and consider changing your password.</p>" +
+                        "</div>";
+
+        helper.setText(content, true);
+
+        mailSender.send(message);
+    }
 }

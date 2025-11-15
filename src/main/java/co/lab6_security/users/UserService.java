@@ -120,4 +120,8 @@ public class UserService {
         user.setRole(newRole);
         userRepository.save(user);
     }
+
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
 }
