@@ -22,7 +22,7 @@ public class PasswordValidator {
         List<String> errors = new ArrayList<>();
 
         if (password == null || password.length() < 8) {
-            errors.add("Passes must be at least 8 characters long");
+            errors.add("Password must be at least 8 characters long");
         }
 
         if (!containsUppercaseLetter(password)) {

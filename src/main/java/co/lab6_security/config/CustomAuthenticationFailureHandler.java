@@ -2,6 +2,7 @@ package co.lab6_security.config;
 
 import co.lab6_security.login_attempt.LoginAttempt;
 import co.lab6_security.login_attempt.LoginAttemptRepository;
+import co.lab6_security.users.AccountLockUtils;
 import co.lab6_security.users.User;
 import co.lab6_security.users.UserRepository;
 import jakarta.servlet.ServletException;
@@ -25,8 +26,8 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
     private final UserRepository userRepository;
     private final LoginAttemptRepository loginAttemptRepository;
 
-    private static final int MAX_FAILED_ATTEMPTS = 5;
-    private static final long LOCK_TIME_DURATION = 15;
+    private static final int MAX_FAILED_ATTEMPTS = SecurityConstants.MAX_FAILED_ATTEMPTS;
+    private static final long LOCK_TIME_DURATION = SecurityConstants.LOCK_TIME_DURATION_MINUTES;
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request,
@@ -84,15 +85,10 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
     }
 
     private boolean isAccountLocked(User user) {
-        if (user.getLockTime() == null) return false;
-        LocalDateTime unlockTime = user.getLockTime().plusMinutes(LOCK_TIME_DURATION);
-        return LocalDateTime.now().isBefore(unlockTime);
+        return AccountLockUtils.isAccountLocked(user);
     }
 
     private long getMinutesUntilUnlock(User user) {
-        if (user.getLockTime() == null) return 0;
-        LocalDateTime unlockTime = user.getLockTime().plusMinutes(LOCK_TIME_DURATION);
-        long minutes = java.time.Duration.between(LocalDateTime.now(), unlockTime).toMinutes();
-        return Math.max(0, minutes);
+        return AccountLockUtils.getMinutesUntilUnlock(user);
     }
 }

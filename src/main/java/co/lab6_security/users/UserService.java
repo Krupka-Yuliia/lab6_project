@@ -1,9 +1,7 @@
 package co.lab6_security.users;
 
-import co.lab6_security.login_attempt.LoginAttempt;
-import co.lab6_security.login_attempt.LoginAttemptRepository;
+import co.lab6_security.config.SecurityConstants;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
@@ -17,14 +15,12 @@ import java.util.UUID;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private final PasswordValidator passwordValidator;
     private final UserMapper userMapper;
     private final EmailService emailService;
-    private final LoginAttemptRepository loginAttemptRepository;
 
-    public static final int MAX_FAILED_ATTEMPTS = 5;
-    public static final long LOCK_TIME_DURATION = 15;
+    public static final int MAX_FAILED_ATTEMPTS = SecurityConstants.MAX_FAILED_ATTEMPTS;
+    public static final long LOCK_TIME_DURATION = SecurityConstants.LOCK_TIME_DURATION_MINUTES;
 
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
@@ -95,11 +91,9 @@ public class UserService {
     }
 
     public boolean isAccountLocked(User user) {
-        if (user.getLockTime() == null) return false;
-        LocalDateTime unlockTime = user.getLockTime().plusMinutes(LOCK_TIME_DURATION);
-        boolean isLocked = LocalDateTime.now().isBefore(unlockTime);
+        boolean isLocked = AccountLockUtils.isAccountLocked(user);
 
-        if (!isLocked) {
+        if (!isLocked && user.getLockTime() != null) {
             user.setLockTime(null);
             user.setFailedAttempts(0);
             userRepository.save(user);
@@ -109,10 +103,7 @@ public class UserService {
     }
 
     public long getMinutesUntilUnlock(User user) {
-        if (user.getLockTime() == null) return 0;
-        LocalDateTime unlockTime = user.getLockTime().plusMinutes(LOCK_TIME_DURATION);
-        long minutes = java.time.Duration.between(LocalDateTime.now(), unlockTime).toMinutes();
-        return Math.max(0, minutes);
+        return AccountLockUtils.getMinutesUntilUnlock(user);
     }
 
     public void unlockUser(Long userId) {

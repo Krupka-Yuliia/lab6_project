@@ -1,5 +1,6 @@
 package co.lab6_security.config;
 
+import co.lab6_security.users.AccountLockUtils;
 import co.lab6_security.users.User;
 import co.lab6_security.users.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ public class SecurityConfig {
     private final CustomAuthenticationSuccessHandler authenticationSuccessHandler;
     private final UserRepository userRepository;
 
-    private static final long LOCK_TIME_DURATION = 15;
+    private static final long LOCK_TIME_DURATION = SecurityConstants.LOCK_TIME_DURATION_MINUTES;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -64,20 +65,16 @@ public class SecurityConfig {
                 throw new BadCredentialsException("Account not activated");
             }
 
-            if (user.getLockTime() != null) {
-                LocalDateTime unlockTime = user.getLockTime().plusMinutes(LOCK_TIME_DURATION);
-
-                if (LocalDateTime.now().isBefore(unlockTime)) {
-                    long minutesLeft = java.time.Duration.between(LocalDateTime.now(), unlockTime).toMinutes();
-                    throw new BadCredentialsException(
-                            "Account is locked due to multiple failed login attempts. " +
-                                    "Try again in " + (minutesLeft + 1) + " minute(s)."
-                    );
-                } else {
-                    user.setLockTime(null);
-                    user.setFailedAttempts(0);
-                    userRepository.save(user);
-                }
+            if (AccountLockUtils.isAccountLocked(user)) {
+                long minutesLeft = AccountLockUtils.getMinutesUntilUnlock(user);
+                throw new BadCredentialsException(
+                        "Account is locked due to multiple failed login attempts. " +
+                                "Try again in " + (minutesLeft + 1) + " minute(s)."
+                );
+            } else if (user.getLockTime() != null) {
+                user.setLockTime(null);
+                user.setFailedAttempts(0);
+                userRepository.save(user);
             }
 
             return org.springframework.security.core.userdetails.User.builder()
