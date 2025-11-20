@@ -184,4 +184,13 @@ public class UserController {
             return "reset_password";
         }
     }
+
+    @GetMapping("/access-denied")
+    public String accessDenied(Model model) {
+        if (!model.containsAttribute("error")) {
+            model.addAttribute("error", "You do not have permission to access this page");
+        }
+        return "access_denied";
+    }
+
 }

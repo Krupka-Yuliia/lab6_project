@@ -120,7 +120,7 @@
                 <td th:text="${user.id}"></td>
                 <td th:text="${user.username}"></td>
                 <td th:text="${user.email}"></td>
-                <td th:text="${user.role.name()}"></td>
+                <td th:text="${user.role != null ? user.role.name() : 'N/A'}"></td>
 
                 <td>
                     <span th:if="${user.enabled}" class="badge-active">Active</span>
