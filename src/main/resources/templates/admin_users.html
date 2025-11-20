@@ -51,16 +51,16 @@
             <td th:text="${user.enabled} ? 'Active' : 'Inactive'"></td>
             <td th:text="${user.failedAttempts}"></td>
             <td>
-                <span th:if="${user.lockTime != null}" class="text-danger">LOCKED</span>
-                <span th:unless="${user.lockTime != null}" class="text-success">UNLOCKED</span>
+                <span th:if="${user.accountLocked}" class="text-danger">LOCKED</span>
+                <span th:unless="${user.accountLocked}" class="text-success">UNLOCKED</span>
             </td>
             <td>
-                <form th:if="${user.lockTime != null}"
+                <form th:if="${user.accountLocked}"
                       th:action="@{/admin/users/{id}/unlock(id=${user.id})}"
                       method="post">
                     <button type="submit" class="btn btn-sm btn-warning">Unlock</button>
                 </form>
-                <span th:unless="${user.lockTime != null}">-</span>
+                <span th:unless="${user.accountLocked}">-</span>
             </td>
         </tr>
         </tbody>

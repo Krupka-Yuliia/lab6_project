@@ -16,7 +16,7 @@ public class DataInitializer implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         if (userRepository.findByUsername("admin").isEmpty()) {
             User admin = new User();
             admin.setUsername("admin");
@@ -25,6 +25,8 @@ public class DataInitializer implements CommandLineRunner {
             admin.setRole(Role.ADMIN);
             admin.setEnabled(true);
             admin.setFailedAttempts(0);
+            admin.setIsOauth2User(false);
+
 
             userRepository.save(admin);
             System.out.println("Default admin user created:");
@@ -41,6 +43,8 @@ public class DataInitializer implements CommandLineRunner {
             user.setRole(Role.USER);
             user.setEnabled(true);
             user.setFailedAttempts(0);
+            user.setIsOauth2User(false);
+
 
             userRepository.save(user);
             System.out.println("Default user created:");

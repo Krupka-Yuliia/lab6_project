@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,13 +25,13 @@ public class SecurityConfig {
     private final CustomAuthenticationSuccessHandler authenticationSuccessHandler;
     private final UserRepository userRepository;
 
-    private static final long LOCK_TIME_DURATION = SecurityConstants.LOCK_TIME_DURATION_MINUTES;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/register", "/activate", "/login", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/register", "/activate", "/login", "/css/**", "/js/**", "/forgot-password",
+                                "/reset-password/**").permitAll()
                         .requestMatchers("/2fa", "/verify-2fa", "/resend-2fa-code").permitAll()
                         .requestMatchers("/enable-2fa", "/disable-2fa").authenticated()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
@@ -50,10 +51,12 @@ public class SecurityConfig {
                 )
                 .exceptionHandling(exception -> exception
                         .accessDeniedPage("/access-denied")
-                );
+                )
+                .csrf(AbstractHttpConfigurer::disable);
 
         return http.build();
     }
+
 
     @Bean
     public UserDetailsService userDetailsService() {

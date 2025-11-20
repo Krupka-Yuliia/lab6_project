@@ -34,47 +34,17 @@ public class UserController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
 
-        User user = userService.findByUsername(username).orElse(null);
+        UserDto userDto = userService.findByUsername(username).orElse(null);
         boolean isAdmin = auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
 
         model.addAttribute("username", username);
-        model.addAttribute("email", user.getEmail() != null ? user.getEmail() : "");
+        model.addAttribute("email", userDto != null ? userDto.getEmail() : "");
         model.addAttribute("isAdmin", isAdmin);
-        model.addAttribute("role", user.getRole().name());
-        model.addAttribute("twoFactorEnabled", user.isTwoFactorEnabled());
+        model.addAttribute("role", userDto != null && userDto.getRole() != null ? userDto.getRole().name() : "");
+        model.addAttribute("twoFactorEnabled", userDto != null && userDto.isTwoFactorEnabled()); // ADD THIS LINE
         model.addAttribute("success", "You are logged in!");
 
         return "success";
-    }
-
-    @PostMapping("/enable-2fa")
-    public String enableTwoFactorAuth(Model model) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-
-        User user = userService.findByUsername(username).orElse(null);
-        if (user != null) {
-            user.setTwoFactorEnabled(true);
-            userService.saveUser(user);
-            model.addAttribute("success", "Two-factor authentication has been enabled for your account.");
-        }
-
-        return "redirect:/home";
-    }
-
-    @PostMapping("/disable-2fa")
-    public String disableTwoFactorAuth(Model model) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-
-        User user = userService.findByUsername(username).orElse(null);
-        if (user != null) {
-            user.setTwoFactorEnabled(false);
-            userService.saveUser(user);
-            model.addAttribute("success", "Two-factor authentication has been disabled for your account.");
-        }
-
-        return "redirect:/home";
     }
 
     @GetMapping("/register")
@@ -124,12 +94,8 @@ public class UserController {
                                 HttpSession session,
                                 Model model) {
 
-        if (error != null) {
-            model.addAttribute("error", "Invalid username or password");
-        }
-        if (logout != null) {
-            model.addAttribute("success", "You have been logged out successfully");
-        }
+        if (error != null) model.addAttribute("error", "Invalid username or password");
+        if (logout != null) model.addAttribute("success", "You have been logged out successfully");
 
         model.addAttribute("maxAttempts", UserService.MAX_FAILED_ATTEMPTS);
 
@@ -144,22 +110,23 @@ public class UserController {
         }
 
         if (username != null && !username.isEmpty()) {
-            userService.findByUsername(username).ifPresent(user -> {
+            userService.findByUsername(username).ifPresent(userDto -> {
                 model.addAttribute("enteredUsername", username);
 
-                if (userService.isAccountLocked(user)) {
-                    model.addAttribute("lockedUser", user);
-                    model.addAttribute("lockedUserLockMinutes", userService.getMinutesUntilUnlock(user));
+                if (userService.isAccountLocked(username)) {
+                    model.addAttribute("lockedUser", userDto);
+                    model.addAttribute("lockedUserLockMinutes", userService.getMinutesUntilUnlock(username));
                 } else {
-                    int remaining = UserService.MAX_FAILED_ATTEMPTS - user.getFailedAttempts();
-                    model.addAttribute("remainingAttempts", remaining);
-                    model.addAttribute("failedAttempts", user.getFailedAttempts());
+                    int remainingAttempts = UserService.MAX_FAILED_ATTEMPTS - userDto.getFailedAttempts();
+                    model.addAttribute("remainingAttempts", remainingAttempts);
+                    model.addAttribute("failedAttempts", userDto.getFailedAttempts());
                 }
             });
         }
 
         return "login";
     }
+
 
     @GetMapping("/activate")
     public String activateAccount(@RequestParam String token, Model model) {
@@ -174,9 +141,47 @@ public class UserController {
         return "activation";
     }
 
-    @GetMapping("/access-denied")
-    public String accessDenied(Model model) {
-        model.addAttribute("error", "You don't have permission to access this page");
-        return "access_denied";
+    @GetMapping("/forgot-password")
+    public String forgotPasswordPage() {
+        return "forgot_password";
+    }
+
+    @PostMapping("/forgot-password")
+    public String processForgotPassword(@RequestParam String email, Model model) {
+        try {
+            userService.sendPasswordReset(email);
+            model.addAttribute("success", "We sent you a reset link!");
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+        }
+        return "forgot_password";
+    }
+
+    @GetMapping("/reset-password")
+    public String showResetForm(@RequestParam String token, Model model) {
+        model.addAttribute("token", token);
+        model.addAttribute("userDto", new UserDto());
+        return "reset_password";
+    }
+
+    @PostMapping("/reset-password")
+    public String processResetPassword(@RequestParam String token,
+                                       @ModelAttribute UserDto dto,
+                                       Model model) {
+
+        try {
+            boolean ok = userService.resetPassword(token, dto);
+            if (ok) {
+                model.addAttribute("success", "Password changed successfully!");
+                return "login";
+            } else {
+                model.addAttribute("error", "Token expired. Please try again.");
+                return "reset_password";
+            }
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("token", token);
+            return "reset_password";
+        }
     }
 }

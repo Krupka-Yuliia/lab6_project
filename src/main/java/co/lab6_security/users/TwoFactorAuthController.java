@@ -24,7 +24,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class TwoFactorAuthController {
 
-    private final UserService userService;
+    private final UserRepository userRepository;
     private final TwoFactorAuthService twoFactorAuthService;
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
@@ -43,21 +43,23 @@ public class TwoFactorAuthController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
-        Optional<User> userOpt = userService.findByUsername(username);
+        Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isEmpty()) {
             model.addAttribute("error", "User not found");
+            model.addAttribute("username", username);
             return "two-factor-auth";
         }
 
         User user = userOpt.get();
+
         if (twoFactorAuthService.validateCode(user, code)) {
-            Authentication auth = new UsernamePasswordAuthenticationToken(
+            var auth = new UsernamePasswordAuthenticationToken(
                     username,
                     null,
                     Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
             );
 
-            ((UsernamePasswordAuthenticationToken) auth).setDetails(new WebAuthenticationDetails(request));
+            auth.setDetails(new WebAuthenticationDetails(request));
 
             SecurityContextHolder.getContext().setAuthentication(auth);
             securityContextRepository.saveContext(SecurityContextHolder.getContext(), request, response);
@@ -77,7 +79,7 @@ public class TwoFactorAuthController {
             return "redirect:/login";
         }
 
-        Optional<User> userOpt = userService.findByUsername(username);
+        Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isEmpty()) {
             return "redirect:/login";
         }
@@ -93,5 +95,27 @@ public class TwoFactorAuthController {
 
         model.addAttribute("username", username);
         return "two-factor-auth";
+    }
+
+    @PostMapping("/enable-2fa")
+    public String enable2FA(Model model) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        twoFactorAuthService.setTwoFactorEnabled(username, true);
+
+        model.addAttribute("success", "Two-Factor Authentication has been enabled!");
+        return "redirect:/home";
+    }
+
+    @PostMapping("/disable-2fa")
+    public String disable2FA(Model model) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        twoFactorAuthService.setTwoFactorEnabled(username, false);
+
+        model.addAttribute("success", "Two-Factor Authentication has been disabled!");
+        return "redirect:/home";
     }
 }

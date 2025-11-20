@@ -49,4 +49,20 @@ public class User {
 
     @Column(name = "two_factor_code_expiry")
     private LocalDateTime twoFactorCodeExpiry;
+
+    @Column(name = "oauth2_provider")
+    private String oauth2Provider;
+
+    @Column(name = "oauth2_id")
+    private String oauth2Id;
+
+    @Column(name = "is_oauth2_user")
+    private Boolean isOauth2User = false;
+
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry")
+    private LocalDateTime resetTokenExpiry;
+
 }

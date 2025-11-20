@@ -66,8 +66,11 @@ public class TwoFactorAuthService {
         return isValid;
     }
 
-    public User setTwoFactorEnabled(User user, boolean enabled) {
+    public void setTwoFactorEnabled(String username, boolean enabled) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         user.setTwoFactorEnabled(enabled);
-        return userRepository.save(user);
+        userRepository.save(user);
     }
 }

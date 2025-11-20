@@ -3,11 +3,9 @@ package co.lab6_security.admin;
 import co.lab6_security.login_attempt.LoginAttempt;
 import co.lab6_security.login_attempt.LoginAttemptRepository;
 import co.lab6_security.users.Role;
-import co.lab6_security.users.User;
+import co.lab6_security.users.UserDto;
 import co.lab6_security.users.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -27,14 +25,14 @@ public class AdminController {
 
     @GetMapping("/dashboard")
     public String adminDashboard(Model model) {
-        List<User> users = userService.findAllUsers();
+        List<UserDto> users = userService.findAllUsers();
         List<LoginAttempt> recentAttempts = loginAttemptRepository.findTop10ByOrderByAttemptTimeDesc();
 
         model.addAttribute("users", users);
         model.addAttribute("totalUsers", users.size());
-        model.addAttribute("activeUsers", users.stream().filter(User::isEnabled).count());
+        model.addAttribute("activeUsers", users.stream().filter(u -> !u.isAccountLocked()).count());
         model.addAttribute("lockedUsers", users.stream()
-                .filter(userService::isAccountLocked).count());
+                .filter(UserDto::isAccountLocked).count());
         model.addAttribute("recentAttempts", recentAttempts);
 
         long todayTotal = loginAttemptRepository.countTodayAttempts();
@@ -90,7 +88,7 @@ public class AdminController {
 
     @GetMapping("/users")
     public String viewUsers(Model model) {
-        List<User> users = userService.findAllUsers();
+        List<UserDto> users = userService.findAllUsers();
         model.addAttribute("users", users);
         model.addAttribute("roles", Role.values());
         return "admin_users";

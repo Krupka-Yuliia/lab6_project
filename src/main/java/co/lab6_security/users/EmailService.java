@@ -56,4 +56,25 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void sendPasswordResetEmail(String to, String resetLink) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setTo(to);
+        helper.setSubject("Password Reset Request");
+
+        String content = """
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                    <h2>Password Reset</h2>
+                    <p>To reset your password, click the link below:</p>
+                    <p><a href='%s'>Reset Password</a></p>
+                    <p>This link is valid for 15 minutes.</p>
+                </div>
+                """.formatted(resetLink);
+
+        helper.setText(content, true);
+        mailSender.send(message);
+    }
+
 }

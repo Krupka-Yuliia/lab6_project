@@ -9,14 +9,6 @@ import java.util.regex.Pattern;
 @Component
 public class PasswordValidator {
 
-    public boolean isValid(String password) {
-        return password != null &&
-                password.length() >= 8 &&
-                containsUppercaseLetter(password) &&
-                containsLowercaseLetter(password) &&
-                containsDigit(password) &&
-                containsSpecialCharacter(password);
-    }
 
     public List<String> getValidationErrors(String password) {
         List<String> errors = new ArrayList<>();

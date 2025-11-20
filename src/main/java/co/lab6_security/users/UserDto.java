@@ -13,6 +13,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserDto {
 
+    private Long id;
+
     @NotBlank(message = "Username is required")
     @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
     private String username;
@@ -33,4 +35,14 @@ public class UserDto {
     private String confirmPassword;
 
     private Role role;
+
+    private String newPassword;
+    private String confirmNewPassword;
+
+    private boolean accountLocked;
+    private long lockedMinutes;
+    private int failedAttempts;
+    private int remainingAttempts;
+    private boolean twoFactorEnabled;
+    private boolean enabled;
 }

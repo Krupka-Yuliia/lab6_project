@@ -2,6 +2,7 @@ package co.lab6_security.users;
 
 import co.lab6_security.config.SecurityConstants;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,9 +20,9 @@ public class UserService {
     private final PasswordValidator passwordValidator;
     private final UserMapper userMapper;
     private final EmailService emailService;
+    private final PasswordEncoder passwordEncoder;
 
     public static final int MAX_FAILED_ATTEMPTS = SecurityConstants.MAX_FAILED_ATTEMPTS;
-    public static final long LOCK_TIME_DURATION = SecurityConstants.LOCK_TIME_DURATION_MINUTES;
 
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
@@ -82,15 +84,24 @@ public class UserService {
         return false;
     }
 
-    public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
+    public Optional<UserDto> findByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(userMapper::toDto);
     }
 
-    public List<User> findAllUsers() {
-        return userRepository.findAll();
+    public List<UserDto> findAllUsers() {
+        return userRepository.findAll().stream()
+                .map(userMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    public boolean isAccountLocked(User user) {
+    public boolean isAccountLocked(String username) {
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            return false;
+        }
+
+        User user = userOpt.get();
         boolean isLocked = AccountLockUtils.isAccountLocked(user);
 
         if (!isLocked && user.getLockTime() != null) {
@@ -102,8 +113,10 @@ public class UserService {
         return isLocked;
     }
 
-    public long getMinutesUntilUnlock(User user) {
-        return AccountLockUtils.getMinutesUntilUnlock(user);
+    public long getMinutesUntilUnlock(String username) {
+        return userRepository.findByUsername(username)
+                .map(AccountLockUtils::getMinutesUntilUnlock)
+                .orElse(0L);
     }
 
     public void unlockUser(Long userId) {
@@ -121,7 +134,45 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public User saveUser(User user) {
-        return userRepository.save(user);
+    public void sendPasswordReset(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User with this email does not exist"));
+
+        String token = UUID.randomUUID().toString();
+        user.setResetToken(token);
+        user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(15));
+
+        userRepository.save(user);
+
+        try {
+            String resetLink = baseUrl + "/reset-password?token=" + token;
+            emailService.sendPasswordResetEmail(email, resetLink);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send reset email: " + e.getMessage());
+        }
+    }
+
+    public boolean resetPassword(String token, UserDto dto) {
+        User user = userRepository.findByResetToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid reset token"));
+
+        if (user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+            return false;
+        }
+
+        List<String> errors = passwordValidator.getValidationErrors(dto.getNewPassword());
+        if (!errors.isEmpty()) {
+            throw new RuntimeException(String.join(", ", errors));
+        }
+
+        if (!dto.getNewPassword().equals(dto.getConfirmNewPassword())) {
+            throw new RuntimeException("Passwords do not match");
+        }
+
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+        userRepository.save(user);
+        return true;
     }
 }

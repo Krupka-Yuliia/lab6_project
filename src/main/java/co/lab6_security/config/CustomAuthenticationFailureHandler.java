@@ -27,7 +27,6 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
     private final LoginAttemptRepository loginAttemptRepository;
 
     private static final int MAX_FAILED_ATTEMPTS = SecurityConstants.MAX_FAILED_ATTEMPTS;
-    private static final long LOCK_TIME_DURATION = SecurityConstants.LOCK_TIME_DURATION_MINUTES;
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request,
