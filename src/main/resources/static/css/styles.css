@@ -1,0 +1,187 @@
+body {
+    background: linear-gradient(135deg, #ffffff 0%, lightgray 100%);
+    min-height: 100vh;
+    font-family: "Inter", sans-serif;
+}
+
+.register-card {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.card-body {
+    padding: 2.5rem;
+}
+
+h2 {
+    color: #333;
+    font-weight: 700;
+}
+
+.oauth-btn {
+    transition: all 0.3s ease;
+    border: 2px solid #e0e0e0;
+    padding: 12px;
+    font-weight: 500;
+}
+
+.oauth-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    border-color: #ff8800;
+}
+
+.google-btn {
+    background: white;
+    color: #444;
+}
+
+.google-btn:hover {
+    background: #f8f9fa;
+}
+
+.google-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.divider span {
+    padding: 0 15px;
+    color: #6c757d;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.form-control:focus {
+    border-color: #ff9900;
+    box-shadow: 0 0 0 0.2rem rgba(255, 153, 0, 0.25);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #ffcc33 0%, #ff8800 100%);
+    border: none;
+    padding: 12px;
+    font-weight: 600;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #e6b42d 0%, #e67800 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 153, 0, 0.4);
+}
+
+.link-text {
+    color: #ff9900;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.link-text:hover {
+    color: #ff8800;
+    text-decoration: underline;
+}
+
+.main-card {
+    border: none;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    background: white;
+}
+
+h1 {
+    font-weight: 700;
+    font-size: 1.8rem;
+    background: linear-gradient(135deg, #ffcc33 0%, #ff8800 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.info-card {
+    border-radius: 15px;
+    border: 2px solid #f0f0f0;
+    transition: all 0.3s ease;
+}
+
+.info-card:hover {
+    border-color: #ff9900;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 153, 0, 0.15);
+}
+
+.info-card .card-header {
+    background: linear-gradient(135deg, #ffcc33 0%, #ff8800 100%);
+    color: white;
+    font-weight: 600;
+    border-radius: 13px 13px 0 0 !important;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #ffcc33 0%, #ff8800 100%);
+    border: none;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #e6b42d 0%, #e67800 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 153, 0, 0.4);
+}
+
+.btn-outline-secondary {
+    border: 2px solid #ff9900;
+    color: #ff9900;
+    font-weight: 600;
+}
+
+.btn-outline-secondary:hover {
+    background: #ff9900;
+    border-color: #ff9900;
+    color: white;
+}
+
+.status-enabled {
+    color: #2ecc71;
+    font-weight: 700;
+}
+
+.status-disabled {
+    color: #e74c3c;
+    font-weight: 700;
+}
+
+.welcome-section {
+    background: linear-gradient(135deg, rgba(255, 204, 51, 0.1) 0%, rgba(255, 136, 0, 0.1) 100%);
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 25px;
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: linear-gradient(135deg, #ffcc33 0%, #ff8800 100%);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}

@@ -1,5 +1,7 @@
 package co.lab6_security.config;
 
+import co.lab6_security.oauth2.CustomOAuth2UserService;
+import co.lab6_security.oauth2.OAuth2AuthenticationSuccessHandler;
 import co.lab6_security.users.AccountLockUtils;
 import co.lab6_security.users.User;
 import co.lab6_security.users.UserRepository;
@@ -23,8 +25,9 @@ public class SecurityConfig {
 
     private final CustomAuthenticationFailureHandler authenticationFailureHandler;
     private final CustomAuthenticationSuccessHandler authenticationSuccessHandler;
+    private final OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler;
+    private final CustomOAuth2UserService customOAuth2UserService;
     private final UserRepository userRepository;
-
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -44,6 +47,13 @@ public class SecurityConfig {
                         .failureHandler(authenticationFailureHandler)
                         .permitAll()
                 )
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login")
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService)
+                        )
+                        .successHandler(oauth2AuthenticationSuccessHandler)
+                )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout=true")
@@ -56,7 +66,6 @@ public class SecurityConfig {
 
         return http.build();
     }
-
 
     @Bean
     public UserDetailsService userDetailsService() {

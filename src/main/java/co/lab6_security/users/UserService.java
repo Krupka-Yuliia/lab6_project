@@ -175,4 +175,8 @@ public class UserService {
         userRepository.save(user);
         return true;
     }
+
+    public Optional<User> findUserEntityByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
 }

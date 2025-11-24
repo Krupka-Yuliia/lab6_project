@@ -41,7 +41,15 @@ public class UserController {
         model.addAttribute("email", userDto != null ? userDto.getEmail() : "");
         model.addAttribute("isAdmin", isAdmin);
         model.addAttribute("role", userDto != null && userDto.getRole() != null ? userDto.getRole().name() : "");
-        model.addAttribute("twoFactorEnabled", userDto != null && userDto.isTwoFactorEnabled()); // ADD THIS LINE
+        model.addAttribute("twoFactorEnabled", userDto != null && userDto.isTwoFactorEnabled());
+
+        if (userDto != null) {
+            User user = userService.findUserEntityByUsername(username).orElse(null);
+            if (user != null && user.getOauth2Provider() != null) {
+                model.addAttribute("oauth2Provider", user.getOauth2Provider());
+            }
+        }
+
         model.addAttribute("success", "You are logged in!");
 
         return "success";
