@@ -1,5 +1,8 @@
-package co.lab6_security.users;
+package co.lab6_security.two_factor;
 
+import co.lab6_security.users.EmailService;
+import co.lab6_security.users.User;
+import co.lab6_security.users.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -3,6 +3,7 @@ package co.lab6_security.users;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -11,14 +12,15 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @Controller
 @RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
     private final CaptchaService captchaService;
+
+    @Value("${recaptcha.site-key}")
+    private String recaptchaSiteKey;
 
     @GetMapping("/")
     public String mainPage() {
@@ -56,30 +58,26 @@ public class UserController {
     }
 
     @GetMapping("/register")
-    public String showRegisterForm(Model model, HttpSession session) {
+    public String showRegisterForm(Model model) {
         model.addAttribute("userDto", new UserDto());
-        Map<String, String> captcha = captchaService.generateCaptcha(session.getId());
-        model.addAttribute("captchaQuestion", captcha.get("question"));
+        model.addAttribute("recaptchaSiteKey", recaptchaSiteKey);
         return "register";
     }
 
     @PostMapping("/register")
     public String registerUser(@Valid @ModelAttribute UserDto userDto,
                                BindingResult result,
-                               @RequestParam("captchaAnswer") String captchaAnswer,
-                               HttpSession session,
+                               @RequestParam(name = "g-recaptcha-response") String recaptchaResponse,
                                Model model) {
 
-        if (!captchaService.validateCaptcha(session.getId(), captchaAnswer)) {
-            model.addAttribute("error", "Incorrect captcha answer. Please try again.");
-            Map<String, String> captcha = captchaService.generateCaptcha(session.getId());
-            model.addAttribute("captchaQuestion", captcha.get("question"));
+        if (!captchaService.validateRecaptcha(recaptchaResponse)) {
+            model.addAttribute("error", "Please complete the reCAPTCHA verification.");
+            model.addAttribute("recaptchaSiteKey", recaptchaSiteKey);
             return "register";
         }
 
         if (result.hasErrors()) {
-            Map<String, String> captcha = captchaService.generateCaptcha(session.getId());
-            model.addAttribute("captchaQuestion", captcha.get("question"));
+            model.addAttribute("recaptchaSiteKey", recaptchaSiteKey);
             return "register";
         }
 
@@ -89,8 +87,7 @@ public class UserController {
             return "activation";
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
-            Map<String, String> captcha = captchaService.generateCaptcha(session.getId());
-            model.addAttribute("captchaQuestion", captcha.get("question"));
+            model.addAttribute("recaptchaSiteKey", recaptchaSiteKey);
             return "register";
         }
     }
@@ -134,7 +131,6 @@ public class UserController {
 
         return "login";
     }
-
 
     @GetMapping("/activate")
     public String activateAccount(@RequestParam String token, Model model) {
@@ -200,5 +196,4 @@ public class UserController {
         }
         return "access_denied";
     }
-
 }

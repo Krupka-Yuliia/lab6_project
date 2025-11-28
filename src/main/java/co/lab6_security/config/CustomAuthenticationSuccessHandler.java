@@ -2,7 +2,7 @@ package co.lab6_security.config;
 
 import co.lab6_security.login_attempt.LoginAttempt;
 import co.lab6_security.login_attempt.LoginAttemptRepository;
-import co.lab6_security.users.TwoFactorAuthService;
+import co.lab6_security.two_factor.TwoFactorAuthService;
 import co.lab6_security.users.User;
 import co.lab6_security.users.UserRepository;
 import jakarta.servlet.ServletException;

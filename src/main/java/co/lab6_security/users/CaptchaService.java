@@ -1,34 +1,47 @@
 package co.lab6_security.users;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class CaptchaService {
-    private final Map<String, String> captchaStore = new ConcurrentHashMap<>();
-    private final Random random = new Random();
 
-    public Map<String, String> generateCaptcha(String sessionId) {
-        int num1 = random.nextInt(10) + 1;
-        int num2 = random.nextInt(10) + 1;
-        String answer = String.valueOf(num1 + num2);
+    @Value("${recaptcha.secret-key}")
+    private String secretKey;
 
-        captchaStore.put(sessionId, answer);
+    private static final String RECAPTCHA_VERIFY_URL =
+            "https://www.google.com/recaptcha/api/siteverify";
 
-        Map<String, String> result = new HashMap<>();
-        result.put("question", num1 + " + " + num2 + " = ?");
-        return result;
-    }
+    public boolean validateRecaptcha(String recaptchaResponse) {
+        if (recaptchaResponse == null || recaptchaResponse.isEmpty()) {
+            return false;
+        }
 
-    public boolean validateCaptcha(String sessionId, String userAnswer) {
-        String correctAnswer = captchaStore.get(sessionId);
+        RestTemplate restTemplate = new RestTemplate();
 
-        captchaStore.remove(sessionId);
+        MultiValueMap<String, String> requestMap = new LinkedMultiValueMap<>();
+        requestMap.add("secret", secretKey);
+        requestMap.add("response", recaptchaResponse);
 
-        return correctAnswer != null && correctAnswer.equals(userAnswer);
+        try {
+            Map<String, Object> response = restTemplate.postForObject(
+                    RECAPTCHA_VERIFY_URL,
+                    requestMap,
+                    Map.class
+            );
+
+            if (response != null && response.containsKey("success")) {
+                return (Boolean) response.get("success");
+            }
+        } catch (Exception e) {
+            System.err.println("reCAPTCHA validation error: " + e.getMessage());
+        }
+
+        return false;
     }
 }

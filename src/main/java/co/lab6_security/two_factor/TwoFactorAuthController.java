@@ -1,5 +1,7 @@
-package co.lab6_security.users;
+package co.lab6_security.two_factor;
 
+import co.lab6_security.users.User;
+import co.lab6_security.users.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
