@@ -16,6 +16,8 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -44,6 +46,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         }
 
         User user = userOpt.get();
+        log.info("Found user: {}, enabled: {}, 2FA: {}", user.getUsername(), user.isEnabled(), user.isTwoFactorEnabled());
 
         UsernamePasswordAuthenticationToken newAuth = new UsernamePasswordAuthenticationToken(
                 user.getUsername(),
@@ -52,11 +55,13 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         );
 
         SecurityContextHolder.getContext().setAuthentication(newAuth);
+        log.info("Authentication set in SecurityContext for user: {}", user.getUsername());
 
         if (user.isTwoFactorEnabled()) {
             log.info("2FA enabled for user: {}, redirecting to 2FA verification", user.getUsername());
             request.getSession().setAttribute("2FA_USER", user.getUsername());
-            response.sendRedirect("/2fa");
+            String encodedUsername = URLEncoder.encode(user.getUsername(), StandardCharsets.UTF_8);
+            response.sendRedirect("/2fa?username=" + encodedUsername);
             return;
         }
 

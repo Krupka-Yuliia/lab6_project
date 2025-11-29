@@ -31,7 +31,19 @@ public class TwoFactorAuthController {
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
     @GetMapping("/2fa")
-    public String showTwoFactorAuthPage(@RequestParam String username, Model model, HttpSession session) {
+    public String showTwoFactorAuthPage(
+            @RequestParam(required = false) String username,
+            Model model,
+            HttpSession session) {
+
+        if (username == null) {
+            username = (String) session.getAttribute("2FA_USER");
+        }
+
+        if (username == null) {
+            return "redirect:/login";
+        }
+
         session.setAttribute("pendingUsername", username);
         model.addAttribute("username", username);
         return "two-factor-auth";
