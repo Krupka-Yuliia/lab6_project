@@ -16,6 +16,13 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class UserController {
 
+    private static final String SUCCESS_ATTRIBUTE = "success";
+    private static final String RECAPTCHA_SITE_KEY_ATTRIBUTE = "recaptchaSiteKey";
+    private static final String REGISTER_VIEW = "register";
+    private static final String ERROR_ATTRIBUTE = "error";
+    private static final String ACCOUNT_LOCKED_ATTRIBUTE = "accountLocked";
+    private static final String RESET_PASSWORD_VIEW = "reset_password";
+
     private final UserService userService;
     private final CaptchaService captchaService;
 
@@ -52,16 +59,16 @@ public class UserController {
             }
         }
 
-        model.addAttribute("success", "You are logged in!");
+        model.addAttribute(SUCCESS_ATTRIBUTE, "You are logged in!");
 
-        return "success";
+        return SUCCESS_ATTRIBUTE;
     }
 
     @GetMapping("/register")
     public String showRegisterForm(Model model) {
         model.addAttribute("userDto", new UserDto());
-        model.addAttribute("recaptchaSiteKey", recaptchaSiteKey);
-        return "register";
+        model.addAttribute(RECAPTCHA_SITE_KEY_ATTRIBUTE, recaptchaSiteKey);
+        return REGISTER_VIEW;
     }
 
     @PostMapping("/register")
@@ -71,24 +78,24 @@ public class UserController {
                                Model model) {
 
         if (!captchaService.validateRecaptcha(recaptchaResponse)) {
-            model.addAttribute("error", "Please complete the reCAPTCHA verification.");
-            model.addAttribute("recaptchaSiteKey", recaptchaSiteKey);
-            return "register";
+            model.addAttribute(ERROR_ATTRIBUTE, "Please complete the reCAPTCHA verification.");
+            model.addAttribute(RECAPTCHA_SITE_KEY_ATTRIBUTE, recaptchaSiteKey);
+            return REGISTER_VIEW;
         }
 
         if (result.hasErrors()) {
-            model.addAttribute("recaptchaSiteKey", recaptchaSiteKey);
-            return "register";
+            model.addAttribute(RECAPTCHA_SITE_KEY_ATTRIBUTE, recaptchaSiteKey);
+            return REGISTER_VIEW;
         }
 
         try {
             userService.registerUser(userDto);
-            model.addAttribute("success", "Registration successful! Please check your email to activate your account.");
+            model.addAttribute(SUCCESS_ATTRIBUTE, "Registration successful! Please check your email to activate your account.");
             return "activation";
         } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
-            model.addAttribute("recaptchaSiteKey", recaptchaSiteKey);
-            return "register";
+            model.addAttribute(ERROR_ATTRIBUTE, e.getMessage());
+            model.addAttribute(RECAPTCHA_SITE_KEY_ATTRIBUTE, recaptchaSiteKey);
+            return REGISTER_VIEW;
         }
     }
 
@@ -99,18 +106,18 @@ public class UserController {
                                 HttpSession session,
                                 Model model) {
 
-        if (error != null) model.addAttribute("error", "Invalid username or password");
-        if (logout != null) model.addAttribute("success", "You have been logged out successfully");
+        if (error != null) model.addAttribute(ERROR_ATTRIBUTE, "Invalid username or password");
+        if (logout != null) model.addAttribute(SUCCESS_ATTRIBUTE, "You have been logged out successfully");
 
         model.addAttribute("maxAttempts", UserService.MAX_FAILED_ATTEMPTS);
 
-        Boolean accountLocked = (Boolean) session.getAttribute("accountLocked");
+        Boolean accountLocked = (Boolean) session.getAttribute(ACCOUNT_LOCKED_ATTRIBUTE);
         Long lockMinutes = (Long) session.getAttribute("lockMinutes");
 
         if (Boolean.TRUE.equals(accountLocked) && lockMinutes != null) {
-            model.addAttribute("accountLocked", true);
+            model.addAttribute(ACCOUNT_LOCKED_ATTRIBUTE, true);
             model.addAttribute("lockedUserLockMinutes", lockMinutes);
-            session.removeAttribute("accountLocked");
+            session.removeAttribute(ACCOUNT_LOCKED_ATTRIBUTE);
             session.removeAttribute("lockMinutes");
         }
 
@@ -137,9 +144,9 @@ public class UserController {
         boolean activated = userService.activateUser(token);
 
         if (activated) {
-            model.addAttribute("success", "Your account has been activated successfully! You can log in now!");
+            model.addAttribute(SUCCESS_ATTRIBUTE, "Your account has been activated successfully! You can log in now!");
         } else {
-            model.addAttribute("error", "Expired or invalid activation token. Try again.");
+            model.addAttribute(ERROR_ATTRIBUTE, "Expired or invalid activation token. Try again.");
         }
 
         return "activation";
@@ -154,9 +161,9 @@ public class UserController {
     public String processForgotPassword(@RequestParam String email, Model model) {
         try {
             userService.sendPasswordReset(email);
-            model.addAttribute("success", "We sent you a reset link!");
+            model.addAttribute(SUCCESS_ATTRIBUTE, "We sent you a reset link!");
         } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
+            model.addAttribute(ERROR_ATTRIBUTE, e.getMessage());
         }
         return "forgot_password";
     }
@@ -165,7 +172,7 @@ public class UserController {
     public String showResetForm(@RequestParam String token, Model model) {
         model.addAttribute("token", token);
         model.addAttribute("userDto", new UserDto());
-        return "reset_password";
+        return RESET_PASSWORD_VIEW;
     }
 
     @PostMapping("/reset-password")
@@ -176,23 +183,23 @@ public class UserController {
         try {
             boolean ok = userService.resetPassword(token, dto);
             if (ok) {
-                model.addAttribute("success", "Password changed successfully!");
+                model.addAttribute(SUCCESS_ATTRIBUTE, "Password changed successfully!");
                 return "login";
             } else {
-                model.addAttribute("error", "Token expired. Please try again.");
-                return "reset_password";
+                model.addAttribute(ERROR_ATTRIBUTE, "Token expired. Please try again.");
+                return RESET_PASSWORD_VIEW;
             }
         } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
+            model.addAttribute(ERROR_ATTRIBUTE, e.getMessage());
             model.addAttribute("token", token);
-            return "reset_password";
+            return RESET_PASSWORD_VIEW;
         }
     }
 
     @GetMapping("/access-denied")
     public String accessDenied(Model model) {
-        if (!model.containsAttribute("error")) {
-            model.addAttribute("error", "You do not have permission to access this page");
+        if (!model.containsAttribute(ERROR_ATTRIBUTE)) {
+            model.addAttribute(ERROR_ATTRIBUTE, "You do not have permission to access this page");
         }
         return "access_denied";
     }

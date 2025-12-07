@@ -1,5 +1,6 @@
 package co.lab6_security.users;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -9,6 +10,7 @@ import org.springframework.util.MultiValueMap;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class CaptchaService {
 
     @Value("${recaptcha.secret-key}")
@@ -39,7 +41,7 @@ public class CaptchaService {
                 return (Boolean) response.get("success");
             }
         } catch (Exception e) {
-            System.err.println("reCAPTCHA validation error: " + e.getMessage());
+            log.error("reCAPTCHA validation error: {}", e.getMessage(), e);
         }
 
         return false;

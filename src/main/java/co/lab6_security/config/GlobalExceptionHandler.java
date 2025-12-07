@@ -11,26 +11,28 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final String ERROR_ATTRIBUTE = "error";
+
     @Value("${recaptcha.site-key}")
     private String recaptchaSiteKey;
 
     @ExceptionHandler(Exception.class)
     public String handleException(Exception e, Model model, HttpServletRequest request) {
-        model.addAttribute("error", "Error occurred: " + e.getMessage());
+        model.addAttribute(ERROR_ATTRIBUTE, "Error occurred: " + e.getMessage());
         addRecaptchaToModel(model);
         return determineReturnPage(request);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public String handleMissingParams(MissingServletRequestParameterException e, Model model, HttpServletRequest request) {
-        model.addAttribute("error", "Necessary parameter is absent: " + e.getParameterName());
+        model.addAttribute(ERROR_ATTRIBUTE, "Necessary parameter is absent: " + e.getParameterName());
         addRecaptchaToModel(model);
         return determineReturnPage(request);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public String handleTypeMismatch(MethodArgumentTypeMismatchException e, Model model, HttpServletRequest request) {
-        model.addAttribute("error", "Incorrect parameter format: " + e.getName());
+        model.addAttribute(ERROR_ATTRIBUTE, "Incorrect parameter format: " + e.getName());
         addRecaptchaToModel(model);
         return determineReturnPage(request);
     }

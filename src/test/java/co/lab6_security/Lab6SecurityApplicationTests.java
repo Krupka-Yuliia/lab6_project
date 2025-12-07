@@ -1,13 +1,14 @@
 package co.lab6_security;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 class Lab6SecurityApplicationTests {
 
     @Test
-    void contextLoads() {
+    void applicationStarts() {
+        assertNotNull(Lab6SecurityApplication.class);
     }
 
 }

@@ -4,12 +4,14 @@ import co.lab6_security.users.Role;
 import co.lab6_security.users.User;
 import co.lab6_security.users.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
@@ -17,11 +19,16 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        String adminPassword = System.getenv("ADMIN_DEFAULT_PASSWORD");
+        if (adminPassword == null || adminPassword.isEmpty()) {
+            adminPassword = java.util.UUID.randomUUID().toString() + "!@#";
+        }
+        
         if (userRepository.findByUsername("admin").isEmpty()) {
             User admin = new User();
             admin.setUsername("admin");
             admin.setEmail("admin@example.com");
-            admin.setPassword(passwordEncoder.encode("Admin123!"));
+            admin.setPassword(passwordEncoder.encode(adminPassword));
             admin.setRole(Role.ADMIN);
             admin.setEnabled(true);
             admin.setFailedAttempts(0);
@@ -29,17 +36,20 @@ public class DataInitializer implements CommandLineRunner {
 
 
             userRepository.save(admin);
-            System.out.println("Default admin user created:");
-            System.out.println("Username: admin");
-            System.out.println("Password: Admin123!");
-            System.out.println("Please change this password after first login!");
+            log.info("Default admin user created with username: admin");
+            log.warn("Please change the default admin password after first login!");
         }
 
+        String userPassword = System.getenv("USER_DEFAULT_PASSWORD");
+        if (userPassword == null || userPassword.isEmpty()) {
+            userPassword = java.util.UUID.randomUUID().toString() + "!@#";
+        }
+        
         if (userRepository.findByUsername("user").isEmpty()) {
             User user = new User();
             user.setUsername("user");
             user.setEmail("user@example.com");
-            user.setPassword(passwordEncoder.encode("User123!"));
+            user.setPassword(passwordEncoder.encode(userPassword));
             user.setRole(Role.USER);
             user.setEnabled(true);
             user.setFailedAttempts(0);
@@ -47,9 +57,8 @@ public class DataInitializer implements CommandLineRunner {
 
 
             userRepository.save(user);
-            System.out.println("Default user created:");
-            System.out.println("Username: user");
-            System.out.println("Password: User123!");
+            log.info("Default user created with username: user");
+            log.warn("Please change the default user password after first login!");
         }
     }
 }

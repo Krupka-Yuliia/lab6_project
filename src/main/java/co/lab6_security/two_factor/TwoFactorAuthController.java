@@ -26,6 +26,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class TwoFactorAuthController {
 
+    private static final String REDIRECT_LOGIN = "redirect:/login";
+    private static final String USERNAME_ATTRIBUTE = "username";
+    private static final String TWO_FACTOR_AUTH_VIEW = "two-factor-auth";
+    private static final String ERROR_ATTRIBUTE = "error";
+    private static final String REDIRECT_HOME = "redirect:/home";
+    private static final String SUCCESS_ATTRIBUTE = "success";
+
     private final UserRepository userRepository;
     private final TwoFactorAuthService twoFactorAuthService;
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
@@ -41,12 +48,12 @@ public class TwoFactorAuthController {
         }
 
         if (username == null) {
-            return "redirect:/login";
+            return REDIRECT_LOGIN;
         }
 
         session.setAttribute("pendingUsername", username);
-        model.addAttribute("username", username);
-        return "two-factor-auth";
+        model.addAttribute(USERNAME_ATTRIBUTE, username);
+        return TWO_FACTOR_AUTH_VIEW;
     }
 
     @PostMapping("/verify-2fa")
@@ -59,9 +66,9 @@ public class TwoFactorAuthController {
 
         Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isEmpty()) {
-            model.addAttribute("error", "User not found");
-            model.addAttribute("username", username);
-            return "two-factor-auth";
+            model.addAttribute(ERROR_ATTRIBUTE, "User not found");
+            model.addAttribute(USERNAME_ATTRIBUTE, username);
+            return TWO_FACTOR_AUTH_VIEW;
         }
 
         User user = userOpt.get();
@@ -78,11 +85,11 @@ public class TwoFactorAuthController {
             SecurityContextHolder.getContext().setAuthentication(auth);
             securityContextRepository.saveContext(SecurityContextHolder.getContext(), request, response);
 
-            return "redirect:/home";
+            return REDIRECT_HOME;
         } else {
-            model.addAttribute("error", "Invalid or expired verification code");
-            model.addAttribute("username", username);
-            return "two-factor-auth";
+            model.addAttribute(ERROR_ATTRIBUTE, "Invalid or expired verification code");
+            model.addAttribute(USERNAME_ATTRIBUTE, username);
+            return TWO_FACTOR_AUTH_VIEW;
         }
     }
 
@@ -90,25 +97,25 @@ public class TwoFactorAuthController {
     public String resendCode(HttpSession session, Model model) {
         String username = (String) session.getAttribute("pendingUsername");
         if (username == null) {
-            return "redirect:/login";
+            return REDIRECT_LOGIN;
         }
 
         Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isEmpty()) {
-            return "redirect:/login";
+            return REDIRECT_LOGIN;
         }
 
         User user = userOpt.get();
         boolean sent = twoFactorAuthService.generateAndSendCode(user);
 
         if (sent) {
-            model.addAttribute("success", "A new verification code has been sent to your email");
+            model.addAttribute(SUCCESS_ATTRIBUTE, "A new verification code has been sent to your email");
         } else {
-            model.addAttribute("error", "Failed to send verification code. Please try again.");
+            model.addAttribute(ERROR_ATTRIBUTE, "Failed to send verification code. Please try again.");
         }
 
-        model.addAttribute("username", username);
-        return "two-factor-auth";
+        model.addAttribute(USERNAME_ATTRIBUTE, username);
+        return TWO_FACTOR_AUTH_VIEW;
     }
 
     @PostMapping("/enable-2fa")
@@ -118,8 +125,8 @@ public class TwoFactorAuthController {
 
         twoFactorAuthService.setTwoFactorEnabled(username, true);
 
-        model.addAttribute("success", "Two-Factor Authentication has been enabled!");
-        return "redirect:/home";
+        model.addAttribute(SUCCESS_ATTRIBUTE, "Two-Factor Authentication has been enabled!");
+        return REDIRECT_HOME;
     }
 
     @PostMapping("/disable-2fa")
@@ -129,7 +136,7 @@ public class TwoFactorAuthController {
 
         twoFactorAuthService.setTwoFactorEnabled(username, false);
 
-        model.addAttribute("success", "Two-Factor Authentication has been disabled!");
-        return "redirect:/home";
+        model.addAttribute(SUCCESS_ATTRIBUTE, "Two-Factor Authentication has been disabled!");
+        return REDIRECT_HOME;
     }
 }

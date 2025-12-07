@@ -17,38 +17,40 @@ public class PasswordValidator {
             errors.add("Password must be at least 8 characters long");
         }
 
-        if (!containsUppercaseLetter(password)) {
-            errors.add("Password must contain at least one uppercase letter");
-        }
+        if (password != null) {
+            if (!containsUppercaseLetter(password)) {
+                errors.add("Password must contain at least one uppercase letter");
+            }
 
-        if (!containsLowercaseLetter(password)) {
-            errors.add("Password must contain at least one lowercase letter");
-        }
+            if (!containsLowercaseLetter(password)) {
+                errors.add("Password must contain at least one lowercase letter");
+            }
 
-        if (!containsDigit(password)) {
-            errors.add("Password must contain at least one digit");
-        }
+            if (!containsDigit(password)) {
+                errors.add("Password must contain at least one digit");
+            }
 
-        if (!containsSpecialCharacter(password)) {
-            errors.add("Password must contain at least one special character");
+            if (!containsSpecialCharacter(password)) {
+                errors.add("Password must contain at least one special character");
+            }
         }
 
         return errors;
     }
 
     private boolean containsUppercaseLetter(String password) {
-        return Pattern.compile("[A-Z]").matcher(password).find();
+        return password != null && Pattern.compile("[A-Z]").matcher(password).find();
     }
 
     private boolean containsLowercaseLetter(String password) {
-        return Pattern.compile("[a-z]").matcher(password).find();
+        return password != null && Pattern.compile("[a-z]").matcher(password).find();
     }
 
     private boolean containsDigit(String password) {
-        return Pattern.compile("\\d").matcher(password).find();
+        return password != null && Pattern.compile("\\d").matcher(password).find();
     }
 
     private boolean containsSpecialCharacter(String password) {
-        return Pattern.compile("[^a-zA-Z0-9]").matcher(password).find();
+        return password != null && Pattern.compile("[^a-zA-Z0-9]").matcher(password).find();
     }
 }

@@ -10,11 +10,14 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class EmailService {
+
+    private static final String UTF_8 = "UTF-8";
+
     private final JavaMailSender mailSender;
 
     public void sendActivationEmail(String to, String activationLink) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, UTF_8);
 
         helper.setTo(to);
         helper.setSubject("Account Activation");
@@ -36,7 +39,7 @@ public class EmailService {
 
     public void sendTwoFactorCode(String to, String code) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, UTF_8);
 
         helper.setTo(to);
         helper.setSubject("Your Two-Factor Authentication Code");
@@ -59,7 +62,7 @@ public class EmailService {
 
     public void sendPasswordResetEmail(String to, String resetLink) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, UTF_8);
 
         helper.setTo(to);
         helper.setSubject("Password Reset Request");

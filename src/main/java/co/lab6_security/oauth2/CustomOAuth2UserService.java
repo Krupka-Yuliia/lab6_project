@@ -17,6 +17,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
+    private static final String ALPHANUMERIC_PATTERN = "[^a-zA-Z0-9]";
+
     private final UserRepository userRepository;
 
     @Override
@@ -61,7 +63,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 }
             } else {
                 if (!user.isEnabled()) {
-                    throw new RuntimeException(
+                    throw new OAuth2AuthenticationException(
+                            new OAuth2Error("account_not_activated"),
                             "Account exists but is not activated."
                     );
                 }
@@ -100,19 +103,19 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
             baseUsername = (givenName.trim() + familyName.trim())
                     .replaceAll("\\s+", "")
-                    .replaceAll("[^a-zA-Z0-9]", "")
+                    .replaceAll(ALPHANUMERIC_PATTERN, "")
                     .toLowerCase();
 
         } else if (fullName != null && !fullName.trim().isEmpty()) {
 
             baseUsername = fullName.trim()
                     .replaceAll("\\s+", "")
-                    .replaceAll("[^a-zA-Z0-9]", "")
+                    .replaceAll(ALPHANUMERIC_PATTERN, "")
                     .toLowerCase();
 
         } else {
             baseUsername = email.split("@")[0]
-                    .replaceAll("[^a-zA-Z0-9]", "")
+                    .replaceAll(ALPHANUMERIC_PATTERN, "")
                     .toLowerCase();
         }
 

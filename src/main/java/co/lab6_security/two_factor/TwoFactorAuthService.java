@@ -4,6 +4,7 @@ import co.lab6_security.users.EmailService;
 import co.lab6_security.users.User;
 import co.lab6_security.users.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TwoFactorAuthService {
 
     private final UserRepository userRepository;
@@ -44,7 +46,7 @@ public class TwoFactorAuthService {
             emailService.sendTwoFactorCode(user.getEmail(), code);
             return true;
         } catch (Exception e) {
-            System.err.println("Failed to send 2FA code: " + e.getMessage());
+            log.error("Failed to send 2FA code: {}", e.getMessage(), e);
             return false;
         }
     }
@@ -71,7 +73,7 @@ public class TwoFactorAuthService {
 
     public void setTwoFactorEnabled(String username, boolean enabled) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new java.util.NoSuchElementException("User not found"));
 
         user.setTwoFactorEnabled(enabled);
         userRepository.save(user);

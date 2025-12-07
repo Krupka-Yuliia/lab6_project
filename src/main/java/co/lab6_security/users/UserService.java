@@ -1,19 +1,21 @@
 package co.lab6_security.users;
 
 import co.lab6_security.config.SecurityConstants;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -29,20 +31,20 @@ public class UserService {
 
     public void registerUser(UserDto userDto) {
         if (!userDto.getPassword().equals(userDto.getConfirmPassword())) {
-            throw new RuntimeException("Passwords do not match");
+            throw new IllegalArgumentException("Passwords do not match");
         }
 
         List<String> errors = passwordValidator.getValidationErrors(userDto.getPassword());
         if (!errors.isEmpty()) {
-            throw new RuntimeException("Password validation failed: " + String.join(", ", errors));
+            throw new IllegalArgumentException("Password validation failed: " + String.join(", ", errors));
         }
 
         if (userRepository.findByUsername(userDto.getUsername()).isPresent()) {
-            throw new RuntimeException("Username already exists");
+            throw new IllegalArgumentException("Username already exists");
         }
 
         if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already exists");
+            throw new IllegalArgumentException("Email already exists");
         }
 
         User user = userMapper.toEntity(userDto);
@@ -62,7 +64,7 @@ public class UserService {
             String activationLink = baseUrl + "/activate?token=" + token;
             emailService.sendActivationEmail(user.getEmail(), activationLink);
         } catch (Exception e) {
-            System.err.println("Failed to send activation email: " + e.getMessage());
+            log.error("Failed to send activation email: {}", e.getMessage(), e);
         }
     }
 
@@ -92,7 +94,7 @@ public class UserService {
     public List<UserDto> findAllUsers() {
         return userRepository.findAll().stream()
                 .map(userMapper::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public boolean isAccountLocked(String username) {
@@ -121,7 +123,7 @@ public class UserService {
 
     public void unlockUser(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new NoSuchElementException("User not found"));
         user.setLockTime(null);
         user.setFailedAttempts(0);
         userRepository.save(user);
@@ -129,14 +131,14 @@ public class UserService {
 
     public void changeUserRole(Long userId, Role newRole) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new NoSuchElementException("User not found"));
         user.setRole(newRole);
         userRepository.save(user);
     }
 
     public void sendPasswordReset(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User with this email does not exist"));
+                .orElseThrow(() -> new NoSuchElementException("User with this email does not exist"));
 
         String token = UUID.randomUUID().toString();
         user.setResetToken(token);
@@ -147,14 +149,14 @@ public class UserService {
         try {
             String resetLink = baseUrl + "/reset-password?token=" + token;
             emailService.sendPasswordResetEmail(email, resetLink);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to send reset email: " + e.getMessage());
+        } catch (jakarta.mail.MessagingException e) {
+            throw new IllegalStateException("Failed to send reset email: " + e.getMessage(), e);
         }
     }
 
     public boolean resetPassword(String token, UserDto dto) {
         User user = userRepository.findByResetToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid reset token"));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid reset token"));
 
         if (user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
             return false;
@@ -162,11 +164,11 @@ public class UserService {
 
         List<String> errors = passwordValidator.getValidationErrors(dto.getNewPassword());
         if (!errors.isEmpty()) {
-            throw new RuntimeException(String.join(", ", errors));
+            throw new IllegalArgumentException(String.join(", ", errors));
         }
 
         if (!dto.getNewPassword().equals(dto.getConfirmNewPassword())) {
-            throw new RuntimeException("Passwords do not match");
+            throw new IllegalArgumentException("Passwords do not match");
         }
 
         user.setPassword(passwordEncoder.encode(dto.getNewPassword()));

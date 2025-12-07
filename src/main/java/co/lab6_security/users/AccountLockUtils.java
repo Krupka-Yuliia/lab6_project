@@ -5,6 +5,9 @@ import co.lab6_security.config.SecurityConstants;
 import java.time.LocalDateTime;
 
 public class AccountLockUtils {
+
+    private AccountLockUtils() {
+    }
     public static boolean isAccountLocked(User user) {
         if (user.getLockTime() == null) return false;
 

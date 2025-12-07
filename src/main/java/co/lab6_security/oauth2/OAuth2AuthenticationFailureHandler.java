@@ -24,8 +24,7 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 
         String errorMessage = "OAuth2 authentication failed";
 
-        if (exception instanceof OAuth2AuthenticationException) {
-            OAuth2AuthenticationException oauth2Exception = (OAuth2AuthenticationException) exception;
+        if (exception instanceof OAuth2AuthenticationException oauth2Exception) {
             String errorCode = oauth2Exception.getError().getErrorCode();
 
             switch (errorCode) {

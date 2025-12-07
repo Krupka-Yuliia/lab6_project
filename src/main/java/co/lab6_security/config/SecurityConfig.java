@@ -23,6 +23,8 @@ import org.springframework.security.web.SecurityFilterChain;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private static final String LOGIN_URL = "/login";
+
     private final CustomAuthenticationFailureHandler authenticationFailureHandler;
     private final CustomAuthenticationSuccessHandler authenticationSuccessHandler;
     private final OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler;
@@ -33,7 +35,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/register", "/activate", "/login", "/css/**", "/js/**", "/forgot-password",
+                        .requestMatchers("/register", "/activate", LOGIN_URL, "/css/**", "/js/**", "/forgot-password",
                                 "/reset-password/**").permitAll()
                         .requestMatchers("/2fa", "/verify-2fa", "/resend-2fa-code").permitAll()
                         .requestMatchers("/enable-2fa", "/disable-2fa").authenticated()
@@ -41,14 +43,14 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        .loginPage("/login")
-                        .loginProcessingUrl("/login")
+                        .loginPage(LOGIN_URL)
+                        .loginProcessingUrl(LOGIN_URL)
                         .successHandler(authenticationSuccessHandler)
                         .failureHandler(authenticationFailureHandler)
                         .permitAll()
                 )
                 .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/login")
+                        .loginPage(LOGIN_URL)
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService)
                         )
@@ -56,13 +58,12 @@ public class SecurityConfig {
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/login?logout=true")
+                        .logoutSuccessUrl(LOGIN_URL + "?logout=true")
                         .permitAll()
                 )
                 .exceptionHandling(exception -> exception
                         .accessDeniedPage("/access-denied")
-                )
-                .csrf(AbstractHttpConfigurer::disable);
+                );
 
         return http.build();
     }
